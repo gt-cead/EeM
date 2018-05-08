@@ -34,6 +34,8 @@ O que apresentaremos a seguir é um exercício de exploração de dados relativa
 
 Os dados principais foram obtidos do Siconfi, sob gestão da <abbr title="Coordenação-Geral de Normas de Contabilidade Aplicadas à Federação">STN/CCONF</abbr>. São dados que contemplam receitas e despesas da maioria dos municípios brasileiros, para o exercício de 2015. Esses dados estão disponíveis em [página do site da Secretaria do Tesouro Nacional](http://www.tesouro.gov.br/web/stn/balanco-do-setor-publico-nacional-bspn-).
 
+![Captura de tela da página da STN em que os dados utilizados se encontram](BSPN_site.png)
+
 Além disso, esses dados foram combinados com [dados](https://www.ibge.gov.br/estatisticas-novoportal/downloads-estatisticas.html) do <abbr title="Instituto Brasileiro de Geografia e Estatística">IBGE</abbr> relativos ao <abbr title="O produto interno bruto (PIB) representa a soma (em valores monetários) de todos os bens e serviços finais produzidos numa determinada região (quer sejam países, estados ou cidades), durante um período determinado (mês, trimestre, ano etc)">PIB</abbr> dos municípios, bem como [dados geográficos desse instituto](https://www.ibge.gov.br/geociencias-novoportal/downloads-geociencias.html) que permitiram o desenvolvimento de visualizações na forma de mapas, e dados da [arrecadação federal](http://idg.receita.fazenda.gov.br/dados/receitadata/arrecadacao/arrecadacao-das-receitas-administradas-pela-rfb-por-municipio) divulgados pela Receita Federal.
 
 ### Definindo "dependência financeira de transferências"
@@ -200,9 +202,9 @@ painel <- painel %>%
   left_join(arrecFedMun, by = "Municipio")
 
 # ajeitando os niveis de CatPop, pq aparecem em vários gráficos mais na frente
-levels(painel$CatPop) <- c("entre 50 e 500 mil", "mais que 500 mil", "menos de 50 mil")
+levels(painel$CatPop) <- c("entre 50 e 500 mil", "mais de 500 mil", "menos de 50 mil")
 # agora sim, redefinindo a ordem dos níveis, para que no gráfico apareça do jeito que quero
-painel$CatPop <- factor(painel$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais que 500 mil")))
+painel$CatPop <- factor(painel$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais de 500 mil")))
 
 # última mexida no dataset: acrescentar capitais
 capitais <- c("Aracaju", "Belém", "Belo Horizonte", "Boa Vista", "Campo Grande", "Cuiabá", "Curitiba", "Florianópolis", "Fortaleza", "Goiânia", "João Pessoa", "Macapá", "Maceió", "Manaus", "Natal", "Palmas", "Porto Alegre", "Porto Velho", "Recife", "Rio Branco", "Rio de Janeiro", "Salvador", "São Luís", "São Paulo", "Teresina", "Vitória")
@@ -226,6 +228,10 @@ Assim, os dados disponíveis no _dataframe_ `painel` formam a nossa base princip
 head(painel)
 ```
 
+Os dados podem ser baixados por este link:
+
+[Baixar dados (.csv)]("https://github.com/gt-cead/gt-cead.github.io/blob/master/downloads/painel.csv")
+
 Vamos construir alguns gráficos baseados em informações geográficas, colorindo o mapa do Brasil município a município, conforme os valores da variável em análise.
 
 ```{r preparacao_mapas, message = FALSE, warning = FALSE}
@@ -245,7 +251,7 @@ ufs <- levels(pibMun$UF)
 regioes <- c("Norte","Nordeste","Norte","Norte","Nordeste","Nordeste","Centro-Oeste","Sudeste","Centro-Oeste","Nordeste","Centro-Oeste","Centro-Oeste","Sudeste","Norte","Nordeste","Sul","Nordeste","Nordeste","Sudeste","Nordeste","Sul","Norte","Norte","Sul","Sudeste","Nordeste","Norte")
 ufXreg <- data.frame(ufs,regioes)
 mapaCatPop <- merge(mapaCatPop, ufXreg, by.x="UF", by.y="ufs")
-mapaCatPop$pop <- cut(mapaCatPop$pop, breaks = c(0,50000,500000,Inf), labels = c("menos de 50 mil","entre 50 e 500 mil","mais que 500 mil"))
+mapaCatPop$pop <- cut(mapaCatPop$pop, breaks = c(0,50000,500000,Inf), labels = c("menos de 50 mil","entre 50 e 500 mil","mais de 500 mil"))
 
 # abrindo o arquivo SDP do IBGE
 # https://mapas.ibge.gov.br/bases-e-referenciais/bases-cartograficas/malhas-digitais.html
@@ -393,16 +399,16 @@ total_pop<-sum(pop)
 
 # (não valeria a pena fazer isso para o painel inteiro?)
 # foi o que fiz!
-#levels(sumario$CatPop) <- c("entre 50 e 500 mil", "mais que 500 mil", "menos de 50 mil")
+#levels(sumario$CatPop) <- c("entre 50 e 500 mil", "mais de 500 mil", "menos de 50 mil")
 # agora sim, redefinindo a ordem dos níveis, para que no gráfico apareça do jeito que quero
-#sumario$CatPop <- factor(sumario$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais que 500 mil")))
+#sumario$CatPop <- factor(sumario$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais de 500 mil")))
 
 sumario$Variavel <- factor((sumario$Variavel), levels = rev(c("Pop","Qde","Pib","recFed", "recIPTU", "despEduc", "despSaud")))
 
 ```
 #### A distribuição de algumas variáveis conforme as categorias de população
 
-No gráfico a seguir, analisaremos como grandezas como população, quantidade de municípios, PIB, arrecadação federal (exceto previdência), arrecadação municipal de IPTU, e despesas municipais com saúde e com educação se distribuem entre os municípios _pequenos_ (até 50 mil habitantes), _médios_ (entre 50 e 500 mil habitantes) e _grandes_ (mais que 500 mil habitantes).
+No gráfico a seguir, analisaremos como grandezas como população, quantidade de municípios, PIB, arrecadação federal (exceto previdência), arrecadação municipal de IPTU, e despesas municipais com saúde e com educação se distribuem entre os municípios _pequenos_ (até 50 mil habitantes), _médios_ (entre 50 e 500 mil habitantes) e _grandes_ (mais de 500 mil habitantes).
 
 Os valores absolutos encontram-se evidenciados na tabela abaixo (valores em R\$).
 
@@ -413,19 +419,28 @@ sumario %>%
   kable("html", col.names=c("Categoria População", "Despesas com Saúde", "Despesas com Educação", "Receitas de IPTU", "Arrecadação Federal", "PIB", "Quantidade", "População"), format.args = list(big.mark=".", decimal.mark=",")) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
+```{r percentuais_no_sumario}
+sumario_percent <- sumario
+sumario_percent$Percent <- 0
+for (i in 1:nrow(sumario_percent)) {
+  sumario_percent$Percent[i] <- scales::percent(sumario_percent$Valor[i]/totais_v[as.character(sumario_percent$Variavel[i])])
+  if (sumario_percent$Variavel[i] != "Qde") {
+    sumario_percent$Valor[i] <- sumario_percent$Valor[i] / 1000000
+  }
+}
+```
 
 
 ```{r plot_sumario}
 plotSumario <- ggplot(sumario, aes(fill=CatPop, y=Valor, x=Variavel)) +
-    coord_flip() +
+    coord_flip()+
     geom_bar( stat="identity", position="fill", width=0.6, color = "white", size = 1) +
     labs(
       x = NULL,
       y = NULL,
       fill = "Categoria População",
       title = "Municípios Brasileiros em 2015, conforme a categoria de tamanho",
-      subtitle = "As linhas pontilhadas indicam a distribuição da população nas categorias"
-    ) +
+      subtitle = "As linhas pontilhadas indicam a distribuição da população nas categorias")+
     scale_x_discrete(labels=c("Qde" = "Quantidade de municípios", 
                               "Pop" = "População",
                               "Pib" = "Produto Interno Bruto",
@@ -436,35 +451,8 @@ plotSumario <- ggplot(sumario, aes(fill=CatPop, y=Valor, x=Variavel)) +
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario$Valor[which(sumario$CatPop == "menos de 50 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario$Valor[which(sumario$CatPop == "mais que 500 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
-    #geom_text(aes(label=Valor, x=Variavel, stat="identity"), position=position_stack(), check_overlap = FALSE, size = 2)+
-  
-    # annotate(geom="text", 
-    #          x=2.6, 
-    #          y=0, 
-    #          label=paste(format(round((100*sumario$Valor[which(sumario$`Categoria População`=="menos de 50k" & sumario$Variavel=="Pop")])/total_pop,2),nsmall=2,decimal.mark=","),"%"), 
-    #          color = "grey50", # tirar daqui e levar para theme
-    #          size = 2, 
-    #          hjust=0) +
-    # 
-    # annotate(geom="text", 
-    #          x=2.7, 
-    #          y=0, 
-    #          label=paste(format(sumario$Valor[which(sumario$`Categoria População`=="menos de 50k" & sumario$Variavel=="Pop")], nsmall=0, big.mark=".", decimal.mark=","), "milhões"), 
-    #          color = "grey50", 
-    #          size = 2, 
-    #          hjust=0) +
-    # annotate(geom="text", 
-    #          x = 7.5, 
-    #          y=(sumario$Valor[which(sumario$CatPop == levels(sumario$CatPop)[1] & sumario$Variavel=="Pop")])/2*total_pop, 
-    #          label = levels(sumario$CatPop)[1], 
-    #          size = 2,
-    #          color = tresCores[1]
-    #          )+ 
-  
-# quando incluo algum desses geom text, às vezes as barras somem. estudar melhor.
-
-    theme_GTCEAD() +
+    geom_hline(yintercept = 1 - (sumario$Valor[which(sumario$CatPop == "mais de 500 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
+  theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
       panel.grid.minor = element_blank(),
@@ -499,9 +487,9 @@ sumario_reg <- painel %>%
 # fiz geral no painel, então acho q não precisa mais aqui
 # definindo a ordem dos fatores da legenda e das categorias (em ordem inversa, go figure)
 # primeiro renomeando as categorias, para tirar os "k"
-#levels(sumario_reg$CatPop) <- c("entre 50 e 500 mil", "mais que 500 mil", "menos de 50 mil")
+#levels(sumario_reg$CatPop) <- c("entre 50 e 500 mil", "mais de 500 mil", "menos de 50 mil")
 # agora sim, redefinindo a ordem dos níveis, para que no gráfico apareça do jeito que quero
-#sumario_reg$CatPop <- factor(sumario_reg$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais que 500 mil")))
+#sumario_reg$CatPop <- factor(sumario_reg$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais de 500 mil")))
 
 # preciso acrescentar o "Brasil" como região, para a comparação. vou aproveitar o "sumario",
 # que não está quebrado por região. vou só fazer um spread.
@@ -633,7 +621,7 @@ plotSumario_reg_pop <- ggplot(sumario_reg, aes(fill = CatPop, y = Pop, x = Regia
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$Pop[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pop"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$Pop[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pop"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$Pop[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pop"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -655,7 +643,7 @@ plotSumario_reg_qde <- ggplot(sumario_reg, aes(fill = CatPop, y = Qde, x = Regia
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$Qde[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Qde"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$Qde[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Qde"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$Qde[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Qde"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -677,7 +665,7 @@ plotSumario_reg_pib <- ggplot(sumario_reg, aes(fill = CatPop, y = Pib, x = Regia
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$Pib[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pib"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$Pib[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pib"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$Pib[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["Pib"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -699,7 +687,7 @@ plotSumario_reg_recFed <- ggplot(sumario_reg, aes(fill = CatPop, y = recFed, x =
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$recFed[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$recFed[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$recFed[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -721,7 +709,7 @@ plotSumario_reg_recFed <- ggplot(sumario_reg, aes(fill = CatPop, y = recFed, x =
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$recFed[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$recFed[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$recFed[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recFed"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -743,7 +731,7 @@ plotSumario_reg_recIPTU <- ggplot(sumario_reg, aes(fill = CatPop, y = recIPTU, x
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$recIPTU[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recIPTU"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$recIPTU[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recIPTU"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$recIPTU[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["recIPTU"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -765,7 +753,7 @@ plotSumario_reg_despEduc <- ggplot(sumario_reg, aes(fill = CatPop, y = despEduc,
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$despEduc[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despEduc"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$despEduc[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despEduc"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$despEduc[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despEduc"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -787,7 +775,7 @@ plotSumario_reg_despSaud <- ggplot(sumario_reg, aes(fill = CatPop, y = despSaud,
     scale_y_continuous(labels = scales::percent) +
     scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
     geom_hline(yintercept = (sumario_reg$despSaud[which(sumario_reg$CatPop == "menos de 50 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despSaud"], color = "white", linetype="dotted", size = 1) +
-    geom_hline(yintercept = 1 - (sumario_reg$despSaud[which(sumario_reg$CatPop == "mais que 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despSaud"], color = "white", linetype="dotted", size = 1) +
+    geom_hline(yintercept = 1 - (sumario_reg$despSaud[which(sumario_reg$CatPop == "mais de 500 mil" & sumario_reg$Regiao=="Brasil")])/totais_v["despSaud"], color = "white", linetype="dotted", size = 1) +
     theme_GTCEAD() +
     theme(
       panel.grid.major = element_blank(), 
@@ -895,9 +883,9 @@ levels(sumario_dep_atividade$atividadePrincipal)[6]<-"Eletricidade e gás, água
 sumario_dep_pop$CatPop <- factor(sumario_dep_pop$CatPop)
 
 # redefinindo os nomes e ordem das categorias de população
-levels(sumario_dep_pop$CatPop) <- c("entre 50 e 500 mil", "mais que 500 mil", "menos de 50 mil", "Todos os municípios")
+levels(sumario_dep_pop$CatPop) <- c("entre 50 e 500 mil", "mais de 500 mil", "menos de 50 mil", "Todos os municípios")
 # agora sim, redefinindo a ordem dos níveis, para que no gráfico apareça do jeito que quero
-sumario_dep_pop$CatPop <- factor(sumario_dep_pop$CatPop, levels = rev(c("Todos os municípios", "menos de 50 mil","entre 50 e 500 mil","mais que 500 mil")))
+sumario_dep_pop$CatPop <- factor(sumario_dep_pop$CatPop, levels = rev(c("Todos os municípios", "menos de 50 mil","entre 50 e 500 mil","mais de 500 mil")))
 
 # vetor de subtotais para linhas horizontais
 totais_dep <- NULL
@@ -1319,8 +1307,11 @@ Para analisar como os graus de dependência variam entre as regiões, faremos us
 
 ![Um infográfico com explicações de como interpretar os boxplots que serão apresentados a seguir](BoxplotExplicado.png)
 
-Vamos então construir um diagrama de caixa para o grau de dependência dos municípios por região.
+Para ilustrar ainda mais os conceitos envolvidos no diagrama de caixa, a animação a seguir mostra a construção de um diagrama desse tipo para o grau de dependência (_variável_) das capitais brasileiras (_observações_).
 
+![Uma animação demonstrando a construção de um diagrama de caixa a partir das observações, no caso os graus de dependência das capitais brasileiras em 2015](construindoBoxplot.gif)
+
+Vamos então construir um diagrama de caixa para o grau de dependência dos municípios por região.
 
 ```{r boxplot1, message=FALSE, warning=FALSE}
 
@@ -1359,7 +1350,9 @@ bpRegiao
 Podemos analisar esse mesmo gráfico para categoria de tamanho do município.
 
 ```{r boxplot_facet}
-bpRegiao + facet_wrap(~CatPop) + theme(axis.text.x = element_text(angle=-30, size = 7))
+bpRegiao + facet_wrap(~CatPop) + 
+  theme(axis.text.x = element_text(angle=-30, size = 7))+
+  theme(legend.position="none")
 ```
 
 Analisando agora do ponto de vista da categoria de tamanho do município, e depois por região.
@@ -1416,7 +1409,8 @@ bpCatPopFacet <- ggplot(painel,
   #theme_minimal() +
   theme_GTCEAD() + 
   facet_grid(~Regiao) + 
-  theme(axis.text.x = element_text(angle=-30, size = 7))
+  theme(axis.text.x = element_text(angle=-30, size = 7))+
+  theme(legend.position="none")
 
 
 bpCatPop
@@ -1454,7 +1448,7 @@ ggplot(medias_UFs) +
      aes(x = Valor,
          y = UF.y,
          label = round(Valor, 2),
-         hjust = ifelse(Quartis == "primQuart", 1.5, -0.5),
+         hjust = ifelse(Quartis == "primQuart", 1.2, -0.2),
          vjust = 0.2,
          family = "Roboto Condensed Light"),
      size = 3) +
