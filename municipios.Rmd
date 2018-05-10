@@ -598,11 +598,15 @@ sumario_tot %>%
 Em percentuais:
 
 ```{r percentuais_no_sumario_reg, warning=FALSE}
-sumario_percent_reg <- sumario_tot_gathered
-sumario_percent_reg$Percent <- 0
-for (i in 1:nrow(sumario_percent_reg)) {
-  sumario_percent_reg$Percent[i] <- scales::percent(round(sumario_percent_reg$Valor[i]/totais_v[as.character(sumario_percent_reg$Variavel[i])],3))
+
+sumario_tot_gathered$Percent <- 0
+for (i in 1:nrow(sumario_tot_gathered)) {
+  sumario_tot_gathered$Percent[i] <- scales::percent(round(sumario_tot_gathered$Valor[i]/totais_v[as.character(sumario_tot_gathered$Variavel[i])],2))
 }
+# arredondei para 2 pq no gráfico não caberiam as casas decimais...
+
+sumario_percent_reg <- sumario_tot_gathered
+
 sumario_percent_reg$Valor <- NULL
 
 sumario_percent_reg %>% spread(key = Variavel, value = Percent) %>%
@@ -616,7 +620,9 @@ sumario_percent_reg %>% spread(key = Variavel, value = Percent) %>%
 
 ```{r plots_dist_reg}
 
-# vetor com posições das linhas
+# vetor com posições das linhas 
+# nota posterior: só resolvi acrescentar os percentuais depois. então talvez nem precisasse desse vetor aqui. 
+# mas agora não dá tempo de avaliar, já que estava funcionando, deixa assim...
 soma <- 0
 pop_acum <- NULL
 for (reg in rev(levels(sumario_tot$Regiao)[1:5])){
@@ -625,9 +631,10 @@ for (reg in rev(levels(sumario_tot$Regiao)[1:5])){
 }
 
 
-plotSumario_Regional <- ggplot(sumario_tot_gathered, aes(fill=Regiao, y=Valor, x=Variavel)) +
+plotSumario_Regional <- ggplot(sumario_tot_gathered, aes(fill=Regiao, y=Valor, x=Variavel, label=Percent)) +
     coord_flip() +
     geom_bar( stat="identity", position="fill", width=0.6, color = "white", size = 1) +
+    geom_text(size = 2, position = position_fill(vjust = 0), hjust = -0.1, vjust = -2.6, family = "Roboto Condensed Light")+
     labs(
       x = NULL,
       y = NULL,
@@ -1195,7 +1202,8 @@ scatter2015_dep <- function(df){
     subtitle = "Municípios Brasileiros em 2015. Escalas logarítmicas.",
     caption = "Fonte: Siconfi"
   )+
-    scale_color_manual(values = c("#832F11","#F8AC08","#96C11E","#08869B"))+
+    #scale_color_manual(values = c("#832F11","#F8AC08","#96C11E","#08869B"))+
+    scale_color_manual(values = coresDep)+
   geom_abline(intercept = 0, slope = 1, linetype="dotted")+
   geom_abline(intercept = desloc(0.80), slope = 1, linetype="dotted")+
   geom_abline(intercept = desloc(0.90), slope = 1, linetype="dotted")+
@@ -1224,7 +1232,7 @@ Para uma melhor visualização, dividiremos o gráfico conforme as regiões.
 scatter2015_dep(painel%>%filter(Regiao == "Norte"))+labs(subtitle = paste("Região", "Norte"))
 scatter2015_dep(painel%>%filter(Regiao == "Nordeste"))+labs(subtitle = paste("Região", "Nordeste"))
 # o centro-oeste não tem municípios com dependência menor que 50%, então o ggplot muda a cor. fixei o vetor de cores na marra só para essa região, mas ficou deselegante.
-scatter2015_dep(painel%>%filter(Regiao == "Centro-Oeste"))+labs(subtitle = paste("Região", "Centro-Oeste"))+scale_color_manual(values = c("#832F11","#F8AC08","#96C11E"))
+scatter2015_dep(painel%>%filter(Regiao == "Centro-Oeste"))+labs(subtitle = paste("Região", "Centro-Oeste"))+scale_color_manual(values = coresDep[1:3])#+scale_color_manual(values = c("#832F11","#F8AC08","#96C11E"))
 scatter2015_dep(painel%>%filter(Regiao == "Sudeste"))+labs(subtitle = paste("Região", "Sudeste"))
 scatter2015_dep(painel%>%filter(Regiao == "Sul"))+labs(subtitle = paste("Região", "Sul"))
 ```
@@ -1612,7 +1620,7 @@ Para cada ano são formados grupos de estados tendo como critério a média do r
 
 Os grupos são formados dinamicamente e possuem uma estrutura e distribuição diferentes a cada ano. Em alguns anos, como 2010, apenas 3 grupos são formados, indicando assim uma homogeneidade em relação à variável analisada. Já em outros anos, como 2013, o número de grupos aumenta indicando uma maior heterogeneidade.
 
-O mapa da esquerda mostra os grupos formados, enquanto o da direita mostra como os estados se diferenciam dentro de cada grupo formado. Quanto mais clara a cor do estado no segundo grupo menor a média do ranking dos seus municípios.
+O mapa da esquerda mostra os grupos formados, enquanto o da direita mostra como os estados se diferenciam dentro de cada grupo formado. Quanto mais clara a cor do estado no segundo mapa, menor a média do ranking dos seus municípios.
 
 
 ![Uma animação demonstrando a construção de um diagrama de caixa a partir das observações, no caso os graus de dependência das capitais brasileiras em 2015](gifEstados.gif)
