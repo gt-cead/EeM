@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
 
 ```{css, echo=FALSE}
 
-h1,h2,h3 {
+h1,h2,h3,h4 {
   color: #004a93;
 }
 
@@ -1109,9 +1109,9 @@ plotSumario_dep_pop <- ggplot(sumario_dep_pop, aes(fill = CatDep, y = Contagem, 
       legend.text = element_text(size = 8),
       legend.title = element_text(size = 8))
 
-plotSumario_dep_regiao
-plotSumario_dep_atividade
-plotSumario_dep_pop
+plotSumario_dep_regiao + theme(legend.position = "bottom")
+plotSumario_dep_atividade + theme(legend.position = "bottom")
+plotSumario_dep_pop + theme(legend.position = "bottom")
 ```
 
 #### Gráficos de dispersão
