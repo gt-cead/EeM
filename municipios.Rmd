@@ -24,7 +24,54 @@ h2 {
   font-weight: bold;
 }
 
+.destaques {
+  padding: 1%;
+  background-color: #eae6af;
+}
+
+.destaques ul {
+  color: #004a93;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.destaques a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.destaques p {
+  padding: 1%;
+}
+
+.destaques p:hover{
+  color: #eae6af;
+  background-color: #004a93;
+}
+
 ```
+## Destaques
+
+<div class="destaques">
+
+[Os municípios com mais de 500 mil habitantes representam menos de 1% do total de municípios brasileiros, mas abrigam 30% da população brasileira, respondem por 40% do PIB, 64% da arrecadação federal e 62% da arrecadação nacional de <abbr title="Imposto de Propriedade Territorial Urbana">IPTU</abbr>.](#distPop)
+
+[Os municípios com menos de 50 mil habitantes são 88% do total de municípios, com apenas 31% da população brasileira, mas respondem por 36% da despesa total dos municípios com Educação.](#distPop)
+
+[A região sudeste concentra 43% da população, e responde por 76% de toda a arrecadação com IPTU no país e por 72% de toda a arrecadação federal, além de ser responsável por 56% do PIB nacional.](#distReg)
+
+[Os municípios mais dependentes são aqueles cuja principal atividade econômica está relacionada a "administração pública", "pecuária" ou "produção florestal, pesca e aquicultura".](#categoriaDep)
+
+[As receitas próprias do conjunto de municípios com população inferior a 500 mil habitantes (99% dos municípios brasileiros) não é suficiente para cobrir nem mesmo as despesas com saúde e educação desses municípios. Em algumas regiões, isso é verdade até para os municípios com população superior a 500 mil habitantes.](#recXdesp)
+
+[Em média, os municípios mais dependentes são aqueles com menos de 50 mil habitantes das regiões norte e nordeste.](#boxplots)
+
+[Em média, os municípios menos dependentes são aqueles com mais de 500 mil habitantes das regiões sul e sudeste.](#boxplots)
+
+[Considerando a mediana, os municípios mais dependentes estariam no Maranhão, equanto que os menos dependentes estariam no Rio de Janeiro.](#dotplot)
+
+</div>
 
 ## Introdução
 
@@ -55,7 +102,7 @@ Neste nosso estudo, utilizamos essencialmente essas duas variáveis, além da _r
 
 Uma ~~crença~~ hipótese recorrente é a de que os municípios das regiões norte e nordeste seriam os mais dependentes de transferências ^[*citation needed*]^.
 
-### Preparação dos dados
+### Preparação dos dados {#prepDados}
 
 Iniciamos a análise carregando as bibliotecas necessárias para a preparação dos dados.
 
@@ -406,69 +453,10 @@ total_pop<-sum(pop)
 sumario$Variavel <- factor((sumario$Variavel), levels = rev(c("Pop","Qde","Pib","recFed", "recIPTU", "despEduc", "despSaud")))
 
 ```
-#### A distribuição de algumas variáveis conforme as categorias de população
-
-No gráfico a seguir, analisaremos como grandezas como população, quantidade de municípios, PIB, arrecadação federal (exceto previdência), arrecadação municipal de IPTU, e despesas municipais com saúde e com educação se distribuem entre os municípios _pequenos_ (até 50 mil habitantes), _médios_ (entre 50 e 500 mil habitantes) e _grandes_ (mais de 500 mil habitantes).
-
-Os valores absolutos encontram-se evidenciados na tabela abaixo (valores em R\$).
-
-```{r tabela_sumario}
-library(kableExtra)
-sumario %>% 
-  spread(key="Variavel", value = "Valor") %>%
-  kable("html", col.names=c("Categoria População", "Despesas com Saúde", "Despesas com Educação", "Receitas de IPTU", "Arrecadação Federal", "PIB", "Quantidade", "População"), format.args = list(big.mark=".", decimal.mark=",")) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-```
-```{r percentuais_no_sumario}
-sumario_percent <- sumario
-sumario_percent$Percent <- 0
-for (i in 1:nrow(sumario_percent)) {
-  sumario_percent$Percent[i] <- scales::percent(round(sumario_percent$Valor[i]/totais_v[as.character(sumario_percent$Variavel[i])],2))
-  }
-```
-
-
-```{r plot_sumario}
-plotSumario <- ggplot(sumario_percent, aes(fill=CatPop, y=Valor, x=Variavel, 
-                                           label=Percent)) +
-  coord_flip() +
-  geom_bar( stat="identity", position ="fill",width=0.6, color = "white", size = 1) +
-  geom_text(size = 2, position = position_fill(vjust = 0), hjust = -0.1, vjust = -2.5, family = "Roboto Condensed Light")+ # mil testes para chegar nesta singlea linha :/
-                       # esse vjust vai variar bastante, dependendo do tamanho. -4 c/ zoom
-  labs(
-    x = NULL,
-    y = NULL,
-    fill = "Categoria População",
-    title = "Municípios Brasileiros em 2015, conforme a categoria de tamanho",
-    subtitle = "As linhas pontilhadas indicam a distribuição da população, para efeito de comparação"
-  ) +
-  scale_x_discrete(labels=c("Qde" = "Quantidade de municípios", 
-                            "Pop" = "População",
-                            "Pib" = "Produto Interno Bruto",
-                            "recFed" = "Arrecadação Federal (exceto Previdência)",
-                            "recIPTU" = "Arrecadação de IPTU",
-                            "despEduc" = "Despesas municipais com Educação",
-                            "despSaud" = "Despesas municipais com Saúde")) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
-  geom_hline(yintercept = (sumario$Valor[which(sumario$CatPop == "menos de 50 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
-  geom_hline(yintercept = 1 - (sumario$Valor[which(sumario$CatPop == "mais de 500 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
-  theme_GTCEAD() +
-  theme(
-    panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank(),
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 8))
-
-plotSumario
-```
-
-#### A distribuição por regiões
-
-Na tabela e no gráfico a seguir, é mostrada a distribuição das mesmas variáveis, mas pelo critério regional.
 
 ```{r sumario_reg}
 
+# subi esse código, que estava na seção seguinte, pq vou precisar do vetor totais_v que ele produz.
 # aprendi uma penca de coisas aqui
 
 sumario_reg <- painel %>%
@@ -534,9 +522,70 @@ sumario_tot_gathered <- sumario_tot %>%
 
 sumario_tot_gathered$Variavel <- factor(sumario_tot_gathered$Variavel, levels= rev(c("Pop","Qde","Pib","recFed","recIPTU","despEduc","despSaud")))
 
-
-
 ```
+
+
+#### A distribuição de algumas variáveis conforme as categorias de população {#distPop}
+
+No gráfico a seguir, analisaremos como grandezas como população, quantidade de municípios, PIB, arrecadação federal (exceto previdência), arrecadação municipal de IPTU, e despesas municipais com saúde e com educação se distribuem entre os municípios _pequenos_ (até 50 mil habitantes), _médios_ (entre 50 e 500 mil habitantes) e _grandes_ (mais de 500 mil habitantes).
+
+Os valores absolutos encontram-se evidenciados na tabela abaixo (valores em R\$).
+
+```{r tabela_sumario}
+library(kableExtra)
+sumario %>% 
+  spread(key="Variavel", value = "Valor") %>%
+  kable("html", col.names=c("Categoria População", "Despesas com Saúde", "Despesas com Educação", "Receitas de IPTU", "Arrecadação Federal", "PIB", "Quantidade", "População"), format.args = list(big.mark=".", decimal.mark=",")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+```{r percentuais_no_sumario}
+sumario_percent <- sumario
+sumario_percent$Percent <- 0
+for (i in 1:nrow(sumario_percent)) {
+  sumario_percent$Percent[i] <- scales::percent(round(sumario_percent$Valor[i]/totais_v[as.character(sumario_percent$Variavel[i])],2))
+  }
+```
+
+
+```{r plot_sumario}
+plotSumario <- ggplot(sumario_percent, aes(fill=CatPop, y=Valor, x=Variavel, 
+                                           label=Percent)) +
+  coord_flip() +
+  geom_bar( stat="identity", position ="fill",width=0.6, color = "white", size = 1) +
+  geom_text(size = 2, position = position_fill(vjust = 0), hjust = -0.1, vjust = -2.6, family = "Roboto Condensed Light")+ # mil testes para chegar nesta singlea linha :/
+                       # esse vjust vai variar bastante, dependendo do tamanho. -4 c/ zoom
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = "Categoria População",
+    title = "Municípios Brasileiros em 2015, conforme a categoria de tamanho",
+    subtitle = "As linhas pontilhadas indicam a distribuição da população, para efeito de comparação"
+  ) +
+  scale_x_discrete(labels=c("Qde" = "Quantidade de municípios", 
+                            "Pop" = "População",
+                            "Pib" = "Produto Interno Bruto",
+                            "recFed" = "Arrecadação Federal (exceto Previdência)",
+                            "recIPTU" = "Arrecadação de IPTU",
+                            "despEduc" = "Despesas municipais com Educação",
+                            "despSaud" = "Despesas municipais com Saúde")) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = tresCores)+#c("#D5845E","#F3987D","#FECE60")) +
+  geom_hline(yintercept = (sumario$Valor[which(sumario$CatPop == "menos de 50 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
+  geom_hline(yintercept = 1 - (sumario$Valor[which(sumario$CatPop == "mais de 500 mil" & sumario$Variavel=="Pop")])/total_pop, color = "white", linetype="dotted", size = 1) +
+  theme_GTCEAD() +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 8),
+    legend.position = 'bottom')
+
+plotSumario
+```
+
+#### A distribuição por regiões {#distReg}
+
+Na tabela e no gráfico a seguir, é mostrada a distribuição das mesmas variáveis, mas pelo critério regional.
 
 Valores em R\$:
 
@@ -546,6 +595,24 @@ sumario_tot %>%
   kable("html", col.names=c("Região", "População", "Quantidade", "Despesas com Saúde", "Despesas com Educação", "Receitas de IPTU", "Arrecadação Federal", "PIB"), format.args = list(big.mark=".", decimal.mark=",")) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
+Em percentuais:
+
+```{r percentuais_no_sumario_reg, warning=FALSE}
+sumario_percent_reg <- sumario_tot_gathered
+sumario_percent_reg$Percent <- 0
+for (i in 1:nrow(sumario_percent_reg)) {
+  sumario_percent_reg$Percent[i] <- scales::percent(round(sumario_percent_reg$Valor[i]/totais_v[as.character(sumario_percent_reg$Variavel[i])],3))
+}
+sumario_percent_reg$Valor <- NULL
+
+sumario_percent_reg %>% spread(key = Variavel, value = Percent) %>%
+  select(Regiao,Pop,Qde,despSaud,despSaud,despEduc,recIPTU,recFed,Pib) %>% #só para definir a ordem
+  kable("html", col.names=c("Região", "População", "Quantidade", "Despesas com Saúde", "Despesas com Educação", "Receitas de IPTU", "Arrecadação Federal", "PIB")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+
+
 
 ```{r plots_dist_reg}
 
@@ -587,7 +654,8 @@ plotSumario_Regional <- ggplot(sumario_tot_gathered, aes(fill=Regiao, y=Valor, x
       panel.grid.major = element_blank(), 
       panel.grid.minor = element_blank(),
       legend.text = element_text(size = 8),
-      legend.title = element_text(size = 8))
+      legend.title = element_text(size = 8),
+      legend.position = 'bottom')
 
 plotSumario_Regional
 
@@ -796,6 +864,80 @@ plotSumario_reg_despSaud
 
 ```
 
+#### As receitas próprias e as despesas com saúde e educação {#recXdesp}
+
+Uma informação que dá uma boa dimensão da dependência dos municípios de transferências governamentais é o fato de que, para o conjunto dos municípios com menos de 500 mil habitantes, as receitas próprias não cobrem as despesas totais com saúde e educação. O gráfico a seguir ilustra esse fato.
+
+```{r rec_propXdesps}
+
+recPdesp <- painel %>%
+  mutate(desp = (DespEduc + DespSaude)/1000000000,
+         rec = RecProp/1000000000) %>%
+  group_by(CatPop,Regiao) %>%
+  summarise(
+    desp = sum(desp, na.rm=TRUE),
+    rec = sum(rec, na.rm=TRUE)) %>%
+  gather(desp, rec, key = "Variavel", value = "Valor" )
+
+recPdesp_pop <- recPdesp %>%
+  group_by(CatPop, Variavel) %>%
+  summarise(Valor = sum(Valor))
+
+```
+
+
+```{r plot_rec_desp_brasil}
+plotRec_x_Desp <- function(dados, subtitulo){
+  ggplot(dados, aes(fill = Variavel, y = Valor, x = CatPop, label = round(Valor,0))) +
+    coord_flip() +
+    scale_color_manual(values = c('desp' = '#832F11', 'rec' = '#1E466A'), guide = "none")+
+    geom_bar(stat="identity", position = position_dodge(width=0.55),width=0.5) +
+    labs(
+      x = 'Categoria de população',
+      y = NULL,
+      fill = "",
+      title = "Receita Própria e Despesa com Saúde e Educação - 2015 (em bilhões de R$)",
+      subtitle = subtitulo
+    ) +
+    #geom_text(aes(color = Variavel), size = 3, position = position_dodge(width=0.55), hjust = -1, vjust = 0, family = "Roboto Condensed Light")+
+    geom_text(color = 'white', size = 3, position = position_dodge(width=0.55), hjust = 1.5, vjust = 0, family = "Roboto Condensed Light")+
+    scale_fill_manual(values=c('#832F11','#1E466A'), labels=c('Despesas com Saúde e Educação','Receitas Próprias')) +
+    scale_y_continuous(labels=function(x) format(x, big.mark = ".", scientific = FALSE))+
+    theme_GTCEAD() +
+    theme(
+      panel.grid.major.y = element_blank(), 
+      panel.grid.minor = element_blank(),
+      legend.text = element_text(size = 8),
+      legend.title = element_text(size = 8),
+      legend.position="bottom")
+}
+
+plotRec_x_Desp(recPdesp_pop,'Brasil')
+```
+
+Vamos observar o comportamento dessas quantidades para cada região nos gráficos seguintes.
+
+```{r recXdesp_regioes, message=FALSE, warning=FALSE}
+# por algum motivo, não funcionou. Vamos na mão, então.
+# for (reg in levels(recPdesp$Regiao)) {
+#   plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+# }
+reg <- "Sul"
+plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+
+reg <- "Sudeste"
+plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+
+reg <- "Centro-Oeste"
+plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+
+reg <- "Nordeste"
+plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+
+reg <- "Norte"
+plotRec_x_Desp(recPdesp %>% filter(Regiao == reg),paste('Região', as.character(reg)))
+```
+
 
 ### Explorando os dados de dependência com gráficos
 
@@ -807,11 +949,7 @@ Como indicado anteriormente, podemos definir um índice de dependência como sen
 
 Grau de Dependência = Receitas de Transferências / Receitas Totais
 
-Em geral, o grau de dependência dos municípios brasileiros é bastante alto. Assim, agrupamos esse indicador nas seguintes faixas:
-
-```{r}
-plyr::count(painel$CatDep)
-```
+Em geral, o grau de dependência dos municípios brasileiros é bastante alto. Em razão disso, agrupamos esse indicador nas faixas indicadas [anteriormente](#prepDados).
 
 Nessa visão geral da dependência, analisaremos como os municípios brasileiros se distribuem nessas categorias, segundo três critérios:
 
@@ -1302,7 +1440,7 @@ Continuar:
 
 * Mostrar arrecadação de IPTU nas regiões
 
-#### A variação dos graus de dependência entre as regiões
+#### A variação dos graus de dependência entre as regiões {#boxplots}
 
 Para analisar como os graus de dependência variam entre as regiões, faremos uso de um "Diagrama de Caixa". Primeiramente, cabe uma breve explicação a respeito de como interpretar esse tipo de gráfico.
 
@@ -1333,7 +1471,7 @@ bpRegiao <- ggplot(painel,
               na.rm = TRUE)+
   #geom_text(aes(label = ifelse(eh_capital, as.character(MunicipioSemUF), '')), nudge_x = 0.05, nudge_y = 0.05, size = 2)+
   labs(
-    x = "Região", # ou "Tamanho do município"
+    x = NULL, # ou "Tamanho do município"
     y = "Grau de dependência",
     title = "Grau de dependência dos municípios em cada Região",
     subtitle = "Os pontos coloridos representam as capitais da região.", 
@@ -1375,7 +1513,7 @@ bpCatPop <- ggplot(painel,
               na.rm = TRUE)+
   #geom_text(aes(label = ifelse(eh_capital, as.character(MunicipioSemUF), '')), nudge_x = 0.05, nudge_y = 0.05, size = 2)+
   labs(
-    x = "Região", # ou "Tamanho do município"
+    x = NULL, # ou "Tamanho do município"
     y = "Grau de dependência",
     title = "Grau de dependência dos municípios em cada Região",
     subtitle = "Os pontos coloridos representam as capitais da região.", 
@@ -1401,7 +1539,7 @@ bpCatPopFacet <- ggplot(painel,
               na.rm = TRUE)+
   #geom_text(aes(label = ifelse(eh_capital, as.character(MunicipioSemUF), '')), nudge_x = 0.05, nudge_y = 0.05, size = 2)+
   labs(
-    x = "Região", # ou "Tamanho do município"
+    x = NULL, # ou "Tamanho do município"
     y = "Grau de dependência",
     title = "Grau de dependência dos municípios em cada Região",
     subtitle = "Os pontos coloridos representam as capitais da região.", 
@@ -1419,7 +1557,7 @@ bpCatPopFacet
 ```
 
 
-#### A variação dos graus de dependência dos municípios nos estados
+#### A variação dos graus de dependência dos municípios nos estados {#dotplot}
 
 Até o momento estivemos analisando o comportamento do grau de dependência em termos de regiões. Vamos explorar no gráfico a seguir o comportamento nos estados. Consideraremos apenas os municípios com grau de dependência que se encontre na região "interquartil", isto é, os municípios intermediários, excluindo-se os 25% mais e os 25% menos dependentes.
 
@@ -1439,7 +1577,7 @@ medias_UFs <- painel %>%
 
 ```
 
-```{r dotplot}
+```{r dotplot, message=FALSE, warning=FALSE}
 ggplot(medias_UFs) +
   geom_path(aes(x = Valor, y = UF.y, color = Regiao), size = 1,
             lineend = "round")+
@@ -1462,9 +1600,25 @@ ggplot(medias_UFs) +
     color = NULL,
     size = ''
   ) +
-  theme_GTCEAD()#+ theme(legend.position="none")
+  theme_GTCEAD()+ theme(legend.position="bottom")
   #coord_cartesian(xlim = c(0.5, 1))
 ```
 
+### Uma análise por grupos de estados
 
+Os mapas animados mostram a evolução da distribuição da dependência de transferência ao longo dos anos. 
+
+Para cada ano são formados grupos de estados tendo como critério a média do ranking dos municípios de cada um dos estados no que diz respeito à dependência de transferência. Nesse ranking quanto maior a dependência de um município em comparação aos demais, maior a posição no ranking. 
+
+Os grupos são formados dinamicamente e possuem uma estrutura e distribuição diferentes a cada ano. Em alguns anos, como 2010, apenas 3 grupos são formados, indicando assim uma homogeneidade em relação à variável analisada. Já em outros anos, como 2013, o número de grupos aumenta indicando uma maior heterogeneidade.
+
+O mapa da esquerda mostra os grupos formados, enquanto o da direita mostra como os estados se diferenciam dentro de cada grupo formado. Quanto mais clara a cor do estado no segundo grupo menor a média do ranking dos seus municípios.
+
+
+![Uma animação demonstrando a construção de um diagrama de caixa a partir das observações, no caso os graus de dependência das capitais brasileiras em 2015](gifEstados.gif)
+
+
+## Conheça também
+
+(As despesas de Pessoal dos Estados Brasileiros -- 2009 a 2017)[https://fabdev.shinyapps.io/mapaCalorDespesasPessoalEstado/]
 
