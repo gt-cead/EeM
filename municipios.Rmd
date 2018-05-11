@@ -254,10 +254,10 @@ levels(painel$CatPop) <- c("entre 50 e 500 mil", "mais de 500 mil", "menos de 50
 painel$CatPop <- factor(painel$CatPop, levels = rev(c("menos de 50 mil","entre 50 e 500 mil","mais de 500 mil")))
 
 # última mexida no dataset: acrescentar capitais
-capitais <- c("Aracaju", "Belém", "Belo Horizonte", "Boa Vista", "Campo Grande", "Cuiabá", "Curitiba", "Florianópolis", "Fortaleza", "Goiânia", "João Pessoa", "Macapá", "Maceió", "Manaus", "Natal", "Palmas", "Porto Alegre", "Porto Velho", "Recife", "Rio Branco", "Rio de Janeiro", "Salvador", "São Luís", "São Paulo", "Teresina", "Vitória")
+capitais <- c("Aracaju - SE", "Belém - PA", "Belo Horizonte - BH", "Boa Vista - RR", "Campo Grande - MS", "Cuiabá - MT", "Curitiba - PR", "Florianópolis - SC", "Fortaleza - CE", "Goiânia - GO", "João Pessoa - PB", "Macapá - AP", "Maceió - AL", "Manaus - AM", "Natal - RN", "Palmas - TO", "Porto Alegre - RS", "Porto Velho - RO", "Recife - PE", "Rio Branco - AC", "Rio de Janeiro - RJ", "Salvador - BA", "São Luís - MA", "São Paulo - SP", "Teresina - PI", "Vitória - ES")
 
 # vou criar um vetor lógico com TRUE quando a cidade for capital (ou seja, estiver no vetor" capitais").
-painel$eh_capital <- painel$MunicipioSemUF %in% capitais
+painel$eh_capital <- painel$Municipio %in% capitais
 
 # vou criar um vetor com o grau de dependência das capitais, com base nesse vetor lógico. se não for capital, ele vai atribuir 0, e aí vou substituir os zeros por NA. Isso para gerar um gráfico boxplot com os pontos das capitais num jitter. vamos ver.
 painel$GrauDepCapit <- painel$GrauDep * painel$eh_capital
@@ -1472,7 +1472,7 @@ bpRegiao <- ggplot(painel,
   #coord_flip() +
   ylim(0.25,1) +
   geom_boxplot(outlier.colour = "darkgray", outlier.alpha = 0.2)+#outlier.size=0)+
-  geom_jitter(aes(x = Regiao, y = GrauDepCapit, size = pop, color = Regiao, label=Municipio),
+  geom_jitter(aes(x = Regiao, y = ifelse(eh_capital, GrauDepCapit, NA), size = pop, color = Regiao, label=Municipio),
               position = position_jitter(width=0.2, height = 0),
               alpha = 0.6,
               show_guide=FALSE,
@@ -1489,9 +1489,11 @@ bpRegiao <- ggplot(painel,
   theme_GTCEAD() #+
   #theme(axis.text.x = element_text(angle=-30, size = 7))
 
-bpRegiao
+#bpRegiao
 
-#ggplotly(bpAtividade)
+#vamos transformar o gráfio em uma versão interativa.
+library(plotly)
+ggplotly(bpRegiao+theme(legend.position = "none"), tooltip = c("Municipio", "GrauDep", "pop"))
 ```
 
 Podemos analisar esse mesmo gráfico para categoria de tamanho do município.
